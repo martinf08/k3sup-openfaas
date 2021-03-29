@@ -18,6 +18,8 @@ Vagrant.configure("2") do |config|
     vb.memory = 2048
   end
 
+  config.vm.provision "docker"
+
   config.vm.provision "shell", inline: <<-SHELL
     echo fs.inotify.max_queued_events = 16384 >> /etc/sysctl.conf
     echo fs.inotify.max_user_instances = 128 >> /etc/sysctl.conf
@@ -42,5 +44,11 @@ Vagrant.configure("2") do |config|
     sudo kubectl config set-context --current --namespace=openfaas
     sudo kubectl apply -f /vagrant/ingress-gateway.yml
     sudo kubectl delete service gateway-external
+
+    curl -sSL https://cli.openfaas.com | sudo sh
+    sudo apt-get install git -y
   SHELL
 end
+
+#faas template pull https://github.com/openfaas-incubator/rust-http-template
+#faas-cli new text-parser --lang rust --gateway http://192.168.10.50
