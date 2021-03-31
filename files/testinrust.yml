@@ -1,0 +1,10 @@
+version: 1.0
+provider:
+  name: openfaas
+  gateway: http://localhost:80
+functions:
+  testinrust:
+    lang: rust
+    handler: ./testinrust
+    image: localhost:5000/testinrust:latest
+
