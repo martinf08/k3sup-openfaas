@@ -19,13 +19,18 @@ Vagrant.configure("2") do |config|
   end
 
   config.vm.provision "shell", inline: <<-SHELL
+    echo "cd /vagrant" >> ~/.bashrc 
     echo fs.inotify.max_queued_events = 16384 >> /etc/sysctl.conf
     echo fs.inotify.max_user_instances = 128 >> /etc/sysctl.conf
     echo fs.inotify.max_user_watches = 16384 >> /etc/sysctl.conf
     sudo sysctl -p
 
     curl -sLS https://get.k3sup.dev | sh
-    sudo install k3sup /usr/local/bin/
+    sudo cp k3sup /usr/local/bin/k3sup
+
+    url -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
+    chmod +x ./kubectl
+    sudo mv ./kubectl /usr/local/bin/kubectl
   
     export K3S_KUBECONFIG_MODE="644"
     k3sup install --local
@@ -54,11 +59,13 @@ Vagrant.configure("2") do |config|
   config.vm.provision "shell", path: "wait-for-it.sh"
 
   config.vm.provision "shell", inline: <<-SHELL
+    faas build -f /vagrant/testinrust.yml
+    docker push localhost:5000/testinrust
     faas login --password admin --gateway localhost:80
+    faas deploy -f testinrust.yml
+    echo "\n"
+    echo http://192.168.10.50/
+    echo "login : admin | password : admin"
+    echo "curl -d 'Hello world' http://192.168.10.50/function/testinrust"
   SHELL
 end
-
-#faas login --password admin --gateway localhost:80
-#faas build -f /vagrant/testinrust.yml
-#docker push localhost:5000/testinrust
-#faas deploy -f testinrust.yml
